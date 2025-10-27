@@ -1,10 +1,110 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>song_detail.html热门歌曲列表</title>
+
+    <style>
+        /* 整体页面样式 */
+        body {
+            font-family: "Microsoft YaHei", sans-serif; /* 使用微软雅黑字体 */
+            background: #fafafa; /* 设置页面背景颜色 */
+            margin: 0;
+            padding: 0;
+        }
+
+        /* 页面主标题样式 */
+        h1 {
+            text-align: center; /* 居中显示 */
+            margin: 30px 0; /* 上下留白 */
+            color: #1E46D4; /* 设置文字颜色 */
+        }
+
+        /* 歌曲卡片容器(网格布局) */
+        .song-grid {
+            display: grid; /* 启用CSS Grid布局 */
+            grid-template-columns: repeat(3, 1fr); /* 一行3列，自动平分宽度 */
+            gap: 20px; /* 卡片之间的间距 */
+            padding: 0 40px; /* 左右内边距 */
+            max-width: 1100px; /* 限制最大宽度，居中显示 */
+            margin: 0 auto; /* 居中 */
+        }
+
+        /* 每首歌的卡片样式 */
+        .song-card {
+            background: #fff; /* 白色背景 */
+            border-radius: 12px; /* 圆角边框 */
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* 轻微阴影 */
+            padding: 20px;
+            text-align: center; /* 居中内容 */
+            transition: all 0.25s ease; /* 鼠标悬停时的动画过渡 */
+        }
+
+        /* 鼠标悬停时的浮动效果 */
+        .song-card:hover {
+            transform: translateY(-4px); /* 向上浮动一点 */
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15); /* 阴影加深 */
+        }
+
+        /* 卡片内链接的默认样式 */
+        .song-card a {
+            color: #2c3e50;
+            text-decoration: none; /* 去掉下划线 */
+        }
+
+        /* 歌曲标题样式 */
+        .song-card h3 {
+            margin: 0 0 10px 0; /* 下方留10px间距 */
+            font-size: 18px; /* 稍大字体 */
+        }
+
+        /* 链接文字样式 */
+        .song-card small {
+            font-size: 13px;
+            color: #888;
+        }
+
+        /* 评论数样式 */
+        .song-card p {
+            margin: 5px 0;
+            color: #555;
+            font-size: 14px;
+        }
+
+        /* 评论数量样式 */
+        .song-card p span {
+            margin: 5px 0;
+            color: #003CFF;
+            font-size: 14px;
+        }
+    </style>
+
 </head>
 <body>
+
+<!-- 页面主标题 -->
+<h1>🎧 网易云音乐热门歌曲</h1>
+
+<!-- 歌曲列表容器 -->
+<div class="song-grid">
+    {% for s in songs %}
+        <!-- 单个歌曲卡片 -->
+        <div class="song-card">
+            <!-- 歌曲标题，点击后跳转到Flask的/song/<song_id>页面 -->
+            <h3>
+                <a href="{{ url_for('song_detail', song_id=s.song_id) }}">🎵 {{ s.title }}</a>
+            </h3>
+
+            <!-- 评论数量 -->
+            <p>💬 评论数 <span>{{ s.comment_count }}</span></p>
+
+            <!-- 外部链接(跳转到网易云音乐原始网页) -->
+            <small>
+                <a href="{{ s.href }}" target="_blank">🔗 网易云音乐网址</a>
+            </small>
+        </div>
+    {% endfor %}
+</div>
 
 </body>
 </html>

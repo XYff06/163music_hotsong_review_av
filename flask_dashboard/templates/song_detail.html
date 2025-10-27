@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ song.title }}</title>
+
+    <!-- 引入ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+
+    <style>
+        /* ================= 全局样式 ================= */
+        body {
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+            background: linear-gradient(180deg, #eef2f7 0%, #f9fafc 100%);
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        h2 {
+            text-align: center;
+            margin: 40px 0 10px;
+            color: #1E46D4;
+            font-size: 28px;
+            letter-spacing: 1px;
+        }
+
+        p.nav-links {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        p.nav-links a {
+            margin: 0 12px;
+            text-decoration: none;
+            color: #34495e;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        p.nav-links a:hover {
+            color: #1E46D4;
+        }
+
+        h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        /* ================= 卡片通用样式 ================= */
+        .card {
+            max-width: 1200px;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+            padding: 25px 30px;
+            margin: 0 auto 60px auto;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        /* ================= 图表容器 ================= */
+        #chart1, #chart2 {
+            width: 100%;
+            height: 480px;
+        }
+
+        /* ================= 词云区域 ================= */
+        .wordcloud-section {
+            text-align: center;
+        }
+
+        .wordcloud-section img {
+            max-width: 92%;
+            height: auto;
+            border-radius: 12px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .wordcloud-section img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- ================= 标题与导航 ================= -->
+<h2>{{ song.title }}</h2>
+<p class="nav-links">
+    <a href="/">⬅ 返回首页</a> |
+    <a href="{{ song.href }}" target="_blank">🎵 访问网易云音乐</a>
+</p>
+
+<!-- ================= 评论曲线 ================= -->
+<div class="card">
+    <h3>📈 评论累计变化趋势</h3>
+    <div id="chart1"></div>
+</div>
+
+<!-- ================= 词云展示 ================= -->
+<div class="card wordcloud-section">
+    <h3>☁ 热门评论词云</h3>
+    {% if wordcloud_path %}
+        <!-- Flask模板变量:动态加载词云图片 -->
+        <img src="{{ url_for('static', filename=wordcloud_path) }}" alt="词云图">
+    {% else %}
+        <p>暂无词云数据</p>
+    {% endif %}
+</div>
+
+<!-- ================= TF-IDF关键词 ================= -->
+<div class="card">
+    <h3>🔥 热门短语(TF-IDF权重)</h3>
+    <div id="chart2"></div>
+</div>
+
+<!-- ================= ECharts配置脚本 ================= -->
+<script>
+    // Flask传入的数据
+    const data = {{ data | tojson }};
+    const tfidf = {{ tfidf | tojson }};
+
+    /* ========== 评论累计折线图 ========== */
+    const chart1 = echarts.init(document.getElementById('chart1'));
+    chart1.setOption({
+        backgroundColor: '#fff',
+        tooltip: {trigger: 'axis'},
+        grid: {left: '8%', right: '8%', bottom: '10%', top: '10%'},
+        xAxis: {
+            type: 'category',
+            boundaryGap: false,
+            data: data.map(d => d.date),
+            axisLabel: {color: '#555', rotate: 0}
+        },
+        yAxis: {
+            type: 'value',
+            name: '累计评论数',
+            nameTextStyle: {color: '#666'},
+            axisLabel: {color: '#555'},
+            splitLine: {lineStyle: {color: '#eee'}}
+        },
+        series: [{
+            name: '评论总数',
+            type: 'line',
+            smooth: true,
+            data: data.map(d => d.cumulative_count),
+            lineStyle: {width: 3, color: '#1E46D4'},
+            itemStyle: {color: '#1E46D4'},
+            areaStyle: {
+                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                    {offset: 0, color: 'rgba(30, 70, 212, 0.25)'},
+                    {offset: 1, color: 'rgba(30, 70, 212, 0.05)'}
+                ])
+            }
+        }]
+    });
+
+    /* ========== TF-IDF条形图 ========== */
+    const chart2 = echarts.init(document.getElementById('chart2'));
+    chart2.setOption({
+        backgroundColor: '#fff',
+        tooltip: {trigger: 'axis', axisPointer: {type: 'shadow'}},
+        grid: {left: '18%', right: '18%', bottom: '10%', top: '10%'},
+        xAxis: {
+            type: 'value',
+            name: 'TF-IDF权重',
+            nameTextStyle: {color: '#666'},
+            axisLabel: {color: '#555'},
+            splitLine: {lineStyle: {color: '#eee'}}
+        },
+        yAxis: {
+            type: 'category',
+            data: tfidf.map(t => t.word).reverse(),
+            axisLabel: {color: '#333', fontWeight: 500}
+        },
+        series: [{
+            name: '关键词权重',
+            type: 'bar',
+            data: tfidf.map(t => t.score).reverse(),
+            barWidth: 16,
+            itemStyle: {
+                color: new echarts.graphic.LinearGradient(1, 0, 0, 0, [
+                    {offset: 0, color: '#4A6CF7'},
+                    {offset: 1, color: '#8BA1FF'}
+                ]),
+                borderRadius: [6, 6, 6, 6]
+            },
+            label: {
+                show: true,
+                position: 'right',
+                formatter: '{c}',
+                color: '#444',
+                fontWeight: '500'
+            }
+        }]
+    });
+
+    // 自适应窗口尺寸
+    window.addEventListener('resize', () => {
+        chart1.resize();
+        chart2.resize();
+    });
+</script>
+
+</body>
+</html>

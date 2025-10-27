@@ -88,25 +88,17 @@ class Data_Save_MySQL_Pipeline:
                 "connect_timeout": 5  # 连接超时时间，单位秒
             }
             """
-            self.conn = pymysql.connect(
-                host=MYSQL['host'],  # 数据库地址
-                port=MYSQL['port'],
-                user=MYSQL['user'],  # 用户名
-                password=MYSQL['password'],  # 密码
-                database=MYSQL['database'],  # 数据库名，如果不存在需要先创建(create database music_163_review;)
-                charset=MYSQL['charset'],
-                connect_timeout=MYSQL['connect_timeout']  # 连接超时时间，单位秒
-            )
-            print("✅ MySQL连接成功！")
+            self.conn = pymysql.connect(**MYSQL)
+            print("✅ MySQL连接成功!")
 
             # 执行简单查询测试
             with self.conn.cursor() as cursor:
                 cursor.execute("SELECT VERSION();")
                 version = cursor.fetchone()
-                print(f"MySQL版本：{version[0]}")
+                print(f"MySQL版本:{version[0]}")
 
         except pymysql.MySQLError as e:
-            print(f"❌ MySQL连接失败！错误信息：{e}")
+            print(f"❌ MySQL连接失败!\n错误信息:{e}")
 
     def close_spider(self, spider):
         if self.conn:
