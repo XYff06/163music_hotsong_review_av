@@ -20,7 +20,7 @@ def run_spider():
         # 使用subprocess启动独立进程
         subprocess.run("scrapy crawl test".split())
     except Exception as e:
-        logging.error(f"爬虫运行出错：{e}")
+        logging.error(f"爬虫运行出错:{e}")
     logging.info(f"爬虫任务结束 at {datetime.now()}")
 
 
